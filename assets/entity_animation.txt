@@ -1,0 +1,1 @@
+sprites/entity_test/idle 1;1 3 

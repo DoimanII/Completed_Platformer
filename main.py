@@ -1,10 +1,11 @@
 import pygame as pg
 import sys
 
+import Engine
 from Debug import debug
 from Settings import *
 from assets.levels.TestLevel import TestLevel
-
+Engine.load_animation('assets/')
 pg.init()
 game_levels = {'Test': TestLevel()}
 state = 'Test'

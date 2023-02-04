@@ -1,6 +1,7 @@
 import pygame as pg
 
-WIN_SIZE, WIN_RES = (800, 600), (800, 600)
+M = 3
+WIN_SIZE, WIN_RES = (800, 600), (800//M, 600//M)
 FPS = 60
 
 
