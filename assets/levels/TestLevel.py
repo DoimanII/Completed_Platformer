@@ -5,7 +5,7 @@ import Engine as E
 
 class TestLevel():
     def __init__(self):
-        self.objectA = E.Physics(100, 100, 100, 100)
+        self.objectA = E.Entity(100, 100, 100, 100)
         self.speed = 300
 
         self.tiles = [pg.Rect(300, 100, 100, 100)]
@@ -27,6 +27,6 @@ class TestLevel():
         movement = self.player_input(dt)
         self.objectA.move(movement, self.tiles)
 
-        pg.draw.rect(display, 'darkred', self.objectA.rect)
+        pg.draw.rect(display, 'darkred', self.objectA.get_rect())
         for tile in self.tiles:
             pg.draw.rect(display, 'darkgreen', tile)

@@ -26,6 +26,12 @@ def load_animation(path):
             n += 1
 
 
+def get_mouse_pos():
+    position = pg.mouse.get_pos()
+    position = position[0] // M, position[1] // M
+    return position
+
+
 class Physics():
     def __init__(self, x, y, width, height):
         self.rect = pg.Rect(x, y, width, height)
@@ -75,6 +81,44 @@ class Physics():
         return collision_type, tile_name
 
 
+class Entity():
+    def __init__(self, x, y, width, height, image=None):
+        self.obj = Physics(x, y, width, height)
+
+        self.image = image
+        self.frame = 0
+
+        self.alpha = 0
+        self.rotation = 0
+        self.flip_x, self.flip_y = False, False
+        self.action = 'idle'
+
+    def get_rect(self):
+        return self.obj.rect
+
+    def get_size(self):
+        return self.obj.rect.size
+
+    def get_pos(self):
+        return self.obj.rect.topleft
+
+    def set_pos(self, pos):
+        self.obj.rect.topleft = pos
+
+    def set_size(self, size):
+        self.obj.rect.size = size
+
+    def move(self, movement, tiles=None, entities=None):
+        self.obj.move(movement, tiles, entities)
+
+    def collide_point(self, point):
+        return self.obj.rect.collidepoint(point)
+
+    def collide_rect(self, rect):
+        return self.obj.rect.colliderect(rect)
+
+    def flip(self, image):
+        return pg.transform.flip(image, self.flip_x, self.flip_y)
 '''
 class Entity():
     def __init__(self, name, x, y, width, height, image=None, id=42):
