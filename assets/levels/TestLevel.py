@@ -9,7 +9,7 @@ class TestLevel():
         self.speed = 300
 
         self.tiles = [pg.Rect(150, 100, 100, 100)]
-
+        self.camera = [0, 0]
     def player_input(self, dt, entity=None):
         movement = [0, 0]
         if keys['right']:
@@ -29,10 +29,9 @@ class TestLevel():
     def play(self, display, dt):
 
         movement = self.player_input(dt, self.objectA)
-        camera = (int(self.objectA.get_pos()[0]-WIN_RES[0]/2+self.objectA.get_size()[0]/2), int(self.objectA.get_pos()[1]-WIN_RES[1]/2+self.objectA.get_size()[1]/2))
         self.objectA.move(movement, self.tiles)
-        self.objectA.render(display, dt,camera)
+        self.objectA.render(display, dt,self.camera)
 
 
         for tile in self.tiles:
-            pg.draw.rect(display, 'darkgreen', (tile.x-camera[0], tile.y-camera[1], tile.w, tile.h))
+            pg.draw.rect(display, 'darkgreen', (tile.x-self.camera[0], tile.y-self.camera[1], tile.w, tile.h))
