@@ -5,8 +5,9 @@ import Engine
 from Debug import debug
 from Settings import *
 from assets.levels.TestLevel import TestLevel
-Engine.load_animation('assets/')
 pg.init()
+
+Engine.load_animation('assets/')
 game_levels = {'Test': TestLevel()}
 state = 'Test'
 

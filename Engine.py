@@ -146,5 +146,4 @@ class Entity():
             image_to_render = pg.transform.rotate(image_to_render, self.rotation)
 
             pos = (self.get_pos()[0] - camera[0], self.get_pos()[1] - camera[1])
-
             display.blit(image_to_render, pos)
