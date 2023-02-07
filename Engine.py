@@ -30,6 +30,99 @@ def load_animation(path):
                 animation_higher_database[entity_name][animation_name].append(animation_path)
             n += 1
 
+def load_level(map):
+    '''
+    - - emptyblock
+
+    # - dirt  16x16
+    @ - dirt 32x16
+    % - dirt 32x32
+
+    g - grass 16x16
+    G - grass 32x32
+    H - grass 32x16
+
+    p - plant 16x16
+    b - bush 16x16
+    t = littleTree 16x16
+    '''
+    tile_map = []
+    entity_map = []
+    world_obj_map = []
+    inx = 0
+    tsize = 16
+    for line, y in enumerate(map):
+        for cell,x in enumerate(y):
+            # Tile map
+            if x == '#':
+                pos = cell*tsize, line*tsize
+                size = tsize, tsize
+                rect = pg.Rect(pos, size)
+                inx = 3
+
+                tile_map.append([inx, rect])
+            if x == '@':
+                pos = cell*tsize, line*tsize
+                size = tsize*2,tsize
+                rect = pg.Rect(pos, size)
+                inx = 4
+
+                tile_map.append([inx, rect])
+            if x == '%':
+                pos = cell*tsize, line*tsize
+                size = tsize*2,tsize*2
+                rect = pg.Rect(pos, size)
+                inx = 5
+
+                tile_map.append([inx, rect])
+            if x == 'g':
+                pos = cell * tsize, line * tsize
+                size = tsize, tsize
+                rect = pg.Rect(pos, size)
+                inx = 0
+
+                tile_map.append([inx, rect])
+            if x == 'H':
+                pos = cell * tsize, line * tsize
+                size = tsize * 2, tsize
+                rect = pg.Rect(pos, size)
+                inx = 1
+
+                tile_map.append([inx, rect])
+            if x == 'G':
+                pos = cell * tsize, line * tsize
+                size = tsize * 2, tsize * 2
+                rect = pg.Rect(pos, size)
+                inx = 2
+
+                tile_map.append([inx, rect])
+
+            # World obj map
+            if x == 'p':
+                pos = cell*tsize, line*tsize
+                size = tsize, tsize
+                rect = pg.Rect(pos, size)
+                inx = 8
+
+                world_obj_map.append([inx, rect])
+            if x == 'b':
+                pos = cell*tsize, line*tsize
+                size = tsize, tsize
+                rect = pg.Rect(pos, size)
+                inx = 7
+
+                world_obj_map.append([inx, rect])
+            if x == 't':
+                pos = cell*tsize, line*tsize
+                size = tsize, tsize
+                rect = pg.Rect(pos, size)
+                inx = 6
+
+                world_obj_map.append([inx, rect])
+
+
+    return tile_map, world_obj_map, entity_map
+
 
 def get_mouse_pos():
     position = pg.mouse.get_pos()
@@ -43,10 +136,11 @@ class Physics():
 
     def __test_collide(self, tiles=None, entities=None):
         hit_list = []
+
         if tiles:
             for tile in tiles:
-                if self.rect.colliderect(tile):
-                    dict = {'rect': tile, 'name': 'tile'}
+                if self.rect.colliderect(tile[1]):
+                    dict = {'rect': tile[1], 'name': tile[0]}
                     hit_list.append(dict)
         if entities:
             for entity in entities:
@@ -101,6 +195,7 @@ class Entity():
         self.flip_x, self.flip_y = False, False
         self.action = 'idle'
 
+
     def get_rect(self):
         return self.obj.rect
 
@@ -145,5 +240,5 @@ class Entity():
             image_to_render.set_alpha(self.alpha)
             image_to_render = pg.transform.rotate(image_to_render, self.rotation)
 
-            pos = (self.get_pos()[0] - camera[0], self.get_pos()[1] - camera[1])
+            pos = WIN_RES[0]//2-self.get_size()[0]//2, WIN_RES[1]//2-self.get_size()[1]//2
             display.blit(image_to_render, pos)

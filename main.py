@@ -26,6 +26,9 @@ while True:
             pg.quit()
             sys.exit()
         if event.type == pg.KEYDOWN:
+            if event.key == pg.K_ESCAPE:
+                pg.quit()
+                sys.exit()
             if event.key == pg.K_LEFT or event.key == pg.K_a:  # Left
                 keys['left'] = True
             if event.key == pg.K_RIGHT or event.key == pg.K_d:  # Right
