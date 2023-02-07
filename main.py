@@ -16,7 +16,7 @@ while True:
     display.fill((134, 212, 229))
 
     game_levels[state].play(display, dt)
-    debug(int(clock.get_fps()), display)
+    debug(f'{int(clock.get_fps())} | {Engine.get_mouse_pos()}', display)
 
     surf = pg.transform.scale(display, WIN_SIZE)
     screen.blit(surf, (0, 0))
@@ -26,6 +26,10 @@ while True:
             pg.quit()
             sys.exit()
         if event.type == pg.KEYDOWN:
+            if event.key == pg.K_ESCAPE:
+                pg.quit()
+                sys.exit()
+
             if event.key == pg.K_LEFT or event.key == pg.K_a:  # Left
                 keys['left'] = True
             if event.key == pg.K_RIGHT or event.key == pg.K_d:  # Right
@@ -34,6 +38,9 @@ while True:
                 keys['up'] = True
             if event.key == pg.K_DOWN or event.key == pg.K_s:  # Down
                 keys['down'] = True
+
+            if event.key == pg.K_e:
+                keys['action'] = True
 
         if event.type == pg.KEYUP:
             if event.key == pg.K_LEFT or event.key == pg.K_a:  # Left
@@ -44,3 +51,6 @@ while True:
                 keys['up'] = False
             if event.key == pg.K_DOWN or event.key == pg.K_s:  # Down
                 keys['down'] = False
+
+            if event.key == pg.K_e:
+                keys['action'] = False
