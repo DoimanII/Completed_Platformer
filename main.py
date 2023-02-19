@@ -5,11 +5,13 @@ import Engine
 from Debug import debug
 from Settings import *
 from assets.levels.TestLevel import TestLevel
+from assets.levels.Sample import Sample
 pg.init()
 
 Engine.load_animation('assets/')
-game_levels = {'Test': TestLevel()}
-state = 'Test'
+game_levels = {'Test': TestLevel(),
+               'Sample': Sample()}
+state = 'Sample'
 
 while True:
     dt = clock.tick(FPS) / 1000

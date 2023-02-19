@@ -35,7 +35,6 @@ class TestLevel():
         movement = self.player_input(dt, self.objectA)
         self.objectA.move(movement, self.tiles)
         if keys['action']:
-            print(self.world_obj[random.randint(0, len(self.world_obj) - 1)])
             # self.ent = random.choice([self.world_obj[random.randint(0, len(self.world_obj)-1)][1], self.objectA.get_rect()])
             if self.HP <= 0:
                 self.HP = 100
