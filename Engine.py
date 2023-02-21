@@ -30,104 +30,67 @@ def load_animation(path):
                 animation_higher_database[entity_name][animation_name].append(animation_path)
             n += 1
 
-def load_level(map):
-    '''
-    - - emptyblock
-
-    # - dirt  16x16
-    @ - dirt 32x16
-    % - dirt 32x32
-
-    g - grass 16x16
-    G - grass 32x32
-    H - grass 32x16
-
-    p - plant 16x16
-    b - bush 16x16
-    t = littleTree 16x16
-    '''
+def load_level_from_image(image):
     tile_map = []
     entity_map = []
     world_obj_map = []
-    inx = 0
-    tsize = 16
-    for line, y in enumerate(map):
-        for cell,x in enumerate(y):
-            # Tile map
-            if x == '#':
-                pos = cell*tsize, line*tsize
-                size = tsize, tsize
+
+    rsize = 16
+    sprites_dict = {
+        (115, 100, 100, 255): (115, 100, 100, 255),
+        (0, 0, 0, 0): (0, 0, 0, 0),
+
+        (126,202,74, 255): (0, (rsize, rsize), 'tile'),
+        (111, 194, 54, 255): (1, (rsize*2, rsize), 'tile'),
+        (81, 177, 16, 255): (2, (rsize * 2, rsize*2), 'tile'),
+        (50, 123, 0, 255): (9, (rsize * 8, rsize * 8), 'tile'),
+
+        (134, 74, 46, 255): (3, (rsize, rsize), 'tile'),
+        (70, 32, 13, 255): (10, (rsize*8, rsize*8), 'tile'),
+
+        (16, 200, 64, 255): (8, (rsize, rsize), 'wob'),
+        (3, 148, 41, 255): (7, (rsize, rsize), 'wob'),
+        (0, 82, 21, 255): (6, (rsize, rsize), 'wob'),
+
+                    }
+    width = image.get_width()
+    height = image.get_height()
+
+    for y in range(0, height):
+        for x in range(0, width):
+            color_got = tuple(image.get_at((x, y)))
+            if color_got != sprites_dict[(115, 100, 100, 255)] and color_got != sprites_dict[(0, 0, 0, 0)]:
+                inx, size = sprites_dict[color_got][0], sprites_dict[color_got][1]
+                pos = x*rsize, y*rsize
                 rect = pg.Rect(pos, size)
-                inx = 3
 
-                tile_map.append([inx, rect])
-            if x == '@':
-                pos = cell*tsize, line*tsize
-                size = tsize*2,tsize
-                rect = pg.Rect(pos, size)
-                inx = 4
-
-                tile_map.append([inx, rect])
-            if x == '%':
-                pos = cell*tsize, line*tsize
-                size = tsize*2,tsize*2
-                rect = pg.Rect(pos, size)
-                inx = 5
-
-                tile_map.append([inx, rect])
-            if x == 'g':
-                pos = cell * tsize, line * tsize
-                size = tsize, tsize
-                rect = pg.Rect(pos, size)
-                inx = 0
-
-                tile_map.append([inx, rect])
-            if x == 'H':
-                pos = cell * tsize, line * tsize
-                size = tsize * 2, tsize
-                rect = pg.Rect(pos, size)
-                inx = 1
-
-                tile_map.append([inx, rect])
-            if x == 'G':
-                pos = cell * tsize, line * tsize
-                size = tsize * 2, tsize * 2
-                rect = pg.Rect(pos, size)
-                inx = 2
-
-                tile_map.append([inx, rect])
-
-            # World obj map
-            if x == 'p':
-                pos = cell*tsize, line*tsize
-                size = tsize, tsize
-                rect = pg.Rect(pos, size)
-                inx = 8
-
-                world_obj_map.append([inx, rect])
-            if x == 'b':
-                pos = cell*tsize, line*tsize
-                size = tsize, tsize
-                rect = pg.Rect(pos, size)
-                inx = 7
-
-                world_obj_map.append([inx, rect])
-            if x == 't':
-                pos = cell*tsize, line*tsize
-                size = tsize, tsize
-                rect = pg.Rect(pos, size)
-                inx = 6
-
-                world_obj_map.append([inx, rect])
-
+                if sprites_dict[color_got][2] == 'tile':
+                    tile_map.append([inx, rect])
+                if sprites_dict[color_got][2] == 'entity':
+                    entity_map.append([inx, rect])
+                if sprites_dict[color_got][2] == 'wob':
+                    world_obj_map.append([inx, rect])
 
     return tile_map, world_obj_map, entity_map
-
 
 def get_mouse_pos():
     position = pg.mouse.get_pos()
     position = position[0] // M, position[1] // M
     return position
+
+def simple_camera(rect, display):
+    return int(rect.x - display.get_width() / 2 + rect.width / 2), int(
+        rect.y - display.get_height() / 2 + rect.height / 2)
+
+
+class GUI():
+    def __init__(self):
+        self.sprites = []
+        self.font = pg.font.Font(None, 8)
+
+    def entity_HP(self, rect, camera, hp):
+        hp_rect = pg.Rect(rect.x-camera[0]+1, rect.y-camera[1]-4, int(0.14*hp), 1)
+        pg.draw.rect(display, 'red', hp_rect)
 
 
 class Physics():
@@ -177,7 +140,7 @@ class Physics():
                 self.rect.top = hit['rect'].bottom
                 collision_type['top'] = True
                 tile_name = hit['name']
-        return collision_type, tile_name
+        return {'collision':collision_type, 'name':tile_name}
 
 
 class Entity():
@@ -194,6 +157,9 @@ class Entity():
         self.rotation = 0
         self.flip_x, self.flip_y = False, False
         self.action = 'idle'
+
+        self.HP = 100
+        self.air_timer = 0
 
 
     def get_rect(self):
@@ -212,7 +178,7 @@ class Entity():
         self.obj.rect.size = size
 
     def move(self, movement, tiles=None, entities=None):
-        self.obj.move(movement, tiles, entities)
+        return self.obj.move(movement, tiles, entities)
 
     def collide_point(self, point):
         return self.obj.rect.collidepoint(point)
@@ -240,5 +206,5 @@ class Entity():
             image_to_render.set_alpha(self.alpha)
             image_to_render = pg.transform.rotate(image_to_render, self.rotation)
 
-            pos = WIN_RES[0]//2-self.get_size()[0]//2, WIN_RES[1]//2-self.get_size()[1]//2
+            pos = self.get_pos()[0] - camera[0], self.get_pos()[1] - camera[1]
             display.blit(image_to_render, pos)

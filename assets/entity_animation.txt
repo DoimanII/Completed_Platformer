@@ -1,1 +1,2 @@
-sprites/entity_test/idle 1;1 1 
+sprites/entity_test/idle 1;1 1
+sprites/entity_test/walk 1;1 1
