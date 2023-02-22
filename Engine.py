@@ -46,6 +46,8 @@ def load_level_from_image(image):
         (50, 123, 0, 255): (9, (rsize * 8, rsize * 8), 'tile'),
 
         (134, 74, 46, 255): (3, (rsize, rsize), 'tile'),
+        (121, 67, 42, 255): (4, (rsize*2, rsize), 'tile'),
+        (121, 55, 24, 255): (5, (rsize*2, rsize*2), 'tile'),
         (70, 32, 13, 255): (10, (rsize*8, rsize*8), 'tile'),
 
         (16, 200, 64, 255): (8, (rsize, rsize), 'wob'),
@@ -160,6 +162,9 @@ class Entity():
 
         self.HP = 100
         self.air_timer = 0
+        self.y_momentum = 0
+        self.speed = 200
+        self.jump_height = 250
 
 
     def get_rect(self):

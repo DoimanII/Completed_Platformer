@@ -4,17 +4,15 @@ import sys
 import Engine
 from Debug import debug
 from Settings import *
-from assets.levels.TestLevel import TestLevel
+from assets.levels.TheFirstLevel import TheFirstLevel
 from assets.levels.Sample import Sample
-from assets.levels.menu import Menu
 
 pg.init()
 
 Engine.load_animation('assets/')
-game_levels = {'Test': TestLevel(),
-               'Sample': Sample(),
-               'menu': Menu()}
-state = 'Sample'
+game_levels = {'TheFirst': TheFirstLevel(),
+               'Sample': Sample(),}
+state = 'TheFirst'
 
 
 while True:
@@ -35,6 +33,10 @@ while True:
             if event.key == pg.K_ESCAPE:
                 pg.quit()
                 sys.exit()
+            if event.key == pg.K_F1:
+                pg.display.set_mode(WIN_SIZE, pg.FULLSCREEN)
+            if event.key == pg.K_F2:
+                pg.display.set_mode(WIN_SIZE)
 
             if event.key == pg.K_LEFT or event.key == pg.K_a:  # Left
                 keys['left'] = True

@@ -8,7 +8,8 @@ FPS = 60
 
 keys = {'left': False, 'right': False, 'up': False, 'down': False, 'action': False, }
 WIN_SIZE = (1280, 720)
-screen = pg.display.set_mode(WIN_SIZE, pg.FULLSCREEN) # , pg.FULLSCREEN
+screen = pg.display.set_mode(WIN_SIZE) # , pg.FULLSCREEN
+
 
 WIN_RES = (screen.get_size()[0]//M, screen.get_size()[1]//M)
 display = pg.Surface(WIN_RES)
@@ -30,5 +31,7 @@ tile_database = {
 
     6:pg.image.load('assets/sprites/tileset/world_objects/little_tree_16x16.png').convert_alpha(), # World Obj
     7:pg.image.load('assets/sprites/tileset/world_objects/bush_16x16.png').convert_alpha(),
-    8:pg.image.load('assets/sprites/tileset/world_objects/plant_16x16.png').convert_alpha()
+    8:pg.image.load('assets/sprites/tileset/world_objects/plant_16x16.png').convert_alpha(),
+
                  }
+
