@@ -34,6 +34,7 @@ def load_level_from_image(image):
     tile_map = []
     entity_map = []
     world_obj_map = []
+    player = None
 
     rsize = 16
     sprites_dict = {
@@ -54,6 +55,8 @@ def load_level_from_image(image):
         (3, 148, 41, 255): (7, (rsize, rsize), 'wob'),
         (0, 82, 21, 255): (6, (rsize, rsize), 'wob'),
 
+        (255,255,255, 255): (Entity('entity_test', 0, 0, 0, 0), (0, 0), 'player'),
+        (121, 46, 106, 255): ('spikes', (0, 0), 'entity')
                     }
     width = image.get_width()
     height = image.get_height()
@@ -63,17 +66,29 @@ def load_level_from_image(image):
             color_got = tuple(image.get_at((x, y)))
             if color_got != sprites_dict[(115, 100, 100, 255)] and color_got != sprites_dict[(0, 0, 0, 0)]:
                 inx, size = sprites_dict[color_got][0], sprites_dict[color_got][1]
-                pos = x*rsize, y*rsize
+                pos = [x*rsize, y*rsize]
                 rect = pg.Rect(pos, size)
 
                 if sprites_dict[color_got][2] == 'tile':
                     tile_map.append([inx, rect])
-                if sprites_dict[color_got][2] == 'entity':
-                    entity_map.append([inx, rect])
+                if sprites_dict[color_got][2] == 'player':
+                    player = inx
+                    player.set_pos(pos)
                 if sprites_dict[color_got][2] == 'wob':
                     world_obj_map.append([inx, rect])
 
-    return tile_map, world_obj_map, entity_map
+                if sprites_dict[color_got][2] == 'entity':
+                    if inx == 'spikes':
+
+                        size = rsize, rsize-5
+                        pos[1] += 5
+                        entity = Entity(inx,*pos, *size ,tile_database[11])
+                        entity.id = len(entity_map)
+                        entity_map.append(entity)
+
+
+
+    return tile_map, world_obj_map, entity_map, player
 
 def get_mouse_pos():
     position = pg.mouse.get_pos()
@@ -105,18 +120,18 @@ class Physics():
         if tiles:
             for tile in tiles:
                 if self.rect.colliderect(tile[1]):
-                    dict = {'rect': tile[1], 'name': tile[0]}
+                    dict = {'rect': tile[1], 'name': ('tile', tile[0])}
                     hit_list.append(dict)
         if entities:
             for entity in entities:
                 if self.rect.colliderect(entity.obj.rect):
-                    dict = {'rect': entity.obj.rect, 'name': entity.name}
+                    dict = {'rect': entity.obj.rect, 'name': (entity.name, entity.id), }
                     hit_list.append(dict)
         return hit_list
 
     def move(self, movement, tiles=None, entities=None):
         collision_type = {'top': False, 'bottom': False, 'left': False, 'right': False}
-        tile_name = None
+        tile_name = [None, None]
         # X-axis
         self.rect.x += int(movement[0])
         hit_list = self.__test_collide(tiles, entities)
@@ -124,11 +139,12 @@ class Physics():
             if movement[0] > 0:
                 self.rect.right = hit['rect'].left
                 collision_type['right'] = True
-                tile_name = hit['name']
+                tile_name = (hit['name'])
             if movement[0] < 0:
                 self.rect.left = hit['rect'].right
                 collision_type['left'] = True
-                tile_name = hit['name']
+                tile_name = (hit['name'])
+
 
         # Y-axis
         self.rect.y += int(movement[1])
@@ -148,6 +164,7 @@ class Physics():
 class Entity():
     def __init__(self, name, x, y, width, height, image=None):
         self.name = name
+        self.id = 0
         self.obj = Physics(x, y, width, height)
 
         self.image = image
@@ -164,7 +181,7 @@ class Entity():
         self.air_timer = 0
         self.y_momentum = 0
         self.speed = 200
-        self.jump_height = 250
+        self.jump_height = 325
 
 
     def get_rect(self):

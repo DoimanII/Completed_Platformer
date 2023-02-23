@@ -1,8 +1,6 @@
 import pygame as pg
 
 M = 4
-
-
 FPS = 60
 
 
@@ -32,6 +30,9 @@ tile_database = {
     6:pg.image.load('assets/sprites/tileset/world_objects/little_tree_16x16.png').convert_alpha(), # World Obj
     7:pg.image.load('assets/sprites/tileset/world_objects/bush_16x16.png').convert_alpha(),
     8:pg.image.load('assets/sprites/tileset/world_objects/plant_16x16.png').convert_alpha(),
+
+
+    11:pg.image.load('assets/sprites/spikes.png').convert_alpha(), # Entity sprites
 
                  }
 

@@ -11,7 +11,8 @@ pg.init()
 
 Engine.load_animation('assets/')
 game_levels = {'TheFirst': TheFirstLevel(),
-               'Sample': Sample(),}
+                'Sample': Sample(),
+               }
 state = 'TheFirst'
 
 
@@ -62,3 +63,4 @@ while True:
 
             if event.key == pg.K_e:
                 keys['action'] = False
+

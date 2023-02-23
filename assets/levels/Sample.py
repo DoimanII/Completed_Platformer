@@ -8,10 +8,10 @@ import Engine as E
 class Sample():
     def __init__(self):
         self.GUI = E.GUI()
-        self.tiles, self.world_obj, self.entities = E.load_level_from_image(
-            pg.image.load('assets/levels/maps/level_map_0.png'))
+        self.tiles, self.world_obj, self.entities, self.player = E.load_level_from_image(
+        pg.image.load('assets/levels/maps/level_0.png'))
 
-        self.player = E.Entity('entity_test', 290, 225, 100, 100)
+
         self.player.collision = {'collision': {'top': False, 'bottom': False, 'left': False, 'right': False},
                                  'name': None}
 
@@ -27,7 +27,7 @@ class Sample():
 
     def player_input(self, dt, entity, collision):
         movement = [0, 0]
-        self.player.y_momentum += 0.2
+        self.player.y_momentum += 20 * dt
 
         if keys['right']:
             movement[0] = self.player.speed * dt
