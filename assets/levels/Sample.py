@@ -25,40 +25,40 @@ class Sample():
             entity.action = 'walk'
             entity.animation_speed = 6
 
-    def player_input(self, dt, entity, collision):
+    def player_input(self, dt, entity):
         movement = [0, 0]
-        self.player.y_momentum += 20 * dt
+        entity.y_momentum += 20 * dt # gravity
 
-        if keys['right']:
-            movement[0] = self.player.speed * dt
+        if keys['right']: # key input
+            movement[0] = entity.speed * dt
             entity.flip_x = True
         if keys['left']:
-            movement[0] = -self.player.speed * dt
+            movement[0] = -entity.speed * dt
             entity.flip_x = False
-        if keys['up'] and collision['bottom']:
-            if self.player.air_timer < 10:
-                self.player.y_momentum = - self.player.jump_height * dt
+        if keys['up'] and entity.collision['collision']['bottom']:
+            if entity.air_timer < 10:
+                entity.y_momentum = - entity.jump_height * dt
 
-        movement[1] += self.player.y_momentum
-        if self.player.y_momentum > 3:
-            self.player.y_momentum = 3
+        movement[1] = entity.y_momentum # max falling speed
+        if entity.y_momentum > 3:
+            entity.y_momentum = 3
+
+        entity.collision = entity.move(movement, self.tiles, self.entities) # collision
+        if entity.collision['collision']['bottom'] or entity.collision['collision']['top']: # If player on ground
+            entity.y_momentum = 1
+            if entity.air_timer > 1:
+                entity.HP -= 10 + int(entity.air_timer * 20)
+            entity.air_timer = 0
+        else:
+            entity.air_timer += 1 * dt
+
+        self.simple_player_animation(movement, entity) # animation
+
         return movement
 
     def play(self, display, dt):
-        # movement
-        movement = self.player_input(dt, self.player, self.player.collision['collision'])
-        # move
-        self.player.collision = self.player.move(movement, self.tiles)
-        if self.player.collision['collision']['bottom'] or self.player.collision['collision']['top']:
-            self.player.y_momentum = 1 * dt
-            self.player.air_timer = 0
-        else:
-            self.player.air_timer += 1 * dt
-        # animation
-        self.simple_player_animation(movement, self.player)
-        # camera
+        movement = self.player_input(dt, self.player)
         camera = E.simple_camera(self.player.get_rect(), display)
-
 
         pg.draw.rect(display, (255, 249, 125), (int(self.BG_obg.x-camera[0]*0.25), int(self.BG_obg.y-camera[1]*0.25), *self.BG_obg.size)) # (55, 148, 100)
 
@@ -78,7 +78,12 @@ class Sample():
 
         # render entity
         for entity in self.entities:
-            pass
+            entity.render(display, dt, camera)
+            if entity.name == self.player.collision['name'][0]:
+                if entity.name == 'spikes' and self.player.collision['collision']['bottom'] and entity.id == self.player.collision['name'][1]:
+                    self.player.y_momentum -= 450 * dt
+                    self.player.HP -= 10
+
 
         # render player
         self.player.render(display, dt, camera)

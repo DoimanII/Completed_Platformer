@@ -4,9 +4,9 @@ M = 4
 FPS = 60
 
 
-keys = {'left': False, 'right': False, 'up': False, 'down': False, 'action': False, }
+keys = {'left': False, 'right': False, 'up': False, 'down': False, 'action': False, 'F3':False}
 WIN_SIZE = (1280, 720)
-screen = pg.display.set_mode(WIN_SIZE) # , pg.FULLSCREEN
+screen = pg.display.set_mode(WIN_SIZE, vsync=1) # , pg.FULLSCREEN
 
 
 WIN_RES = (screen.get_size()[0]//M, screen.get_size()[1]//M)

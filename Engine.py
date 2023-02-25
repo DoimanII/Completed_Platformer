@@ -166,6 +166,8 @@ class Entity():
         self.name = name
         self.id = 0
         self.obj = Physics(x, y, width, height)
+        self.collision = {'collision': {'top': False, 'bottom': False, 'left': False, 'right': False},
+                                 'name': [None, None]}
 
         self.image = image
         self.animation = None if name not in animation_higher_database else animation_higher_database[name]

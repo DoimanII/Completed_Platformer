@@ -21,7 +21,8 @@ while True:
     display.fill((134, 212, 229))
 
     game_levels[state].play(display, dt)
-    debug(f'{int(clock.get_fps())} | {Engine.get_mouse_pos()}', display)
+    if keys['F3']:
+        debug(f'{int(clock.get_fps())} | {game_levels[state].player.get_rect()}', display) # game_levels[state] Engine.get_mouse_pos()
 
     surf = pg.transform.scale(display, WIN_SIZE)
     screen.blit(surf, (0, 0))
@@ -38,6 +39,8 @@ while True:
                 pg.display.set_mode(WIN_SIZE, pg.FULLSCREEN)
             if event.key == pg.K_F2:
                 pg.display.set_mode(WIN_SIZE)
+            if event.key == pg.K_F3:
+                keys['F3'] = True if keys['F3'] == False else False
 
             if event.key == pg.K_LEFT or event.key == pg.K_a:  # Left
                 keys['left'] = True

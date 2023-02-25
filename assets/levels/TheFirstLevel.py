@@ -11,10 +11,7 @@ class TheFirstLevel():
         self.tiles, self.world_obj, self.entities, self.player = E.load_level_from_image(
         pg.image.load('assets/levels/maps/level_1.png')) # , self.player
 
-        self.player.collision = {'collision': {'top': False, 'bottom': False, 'left': False, 'right': False},
-                                 'name': [None, None]}
-
-        self.BG_obg = pg.Rect(300, 50, 25, 25)
+        self.BG_obg = [[pg.Rect(300, 50, 25, 25), 0.25, (255, 249, 125)], [pg.Rect(200, 55, 65, 500), 0.35, (55, 148, 110)], [pg.Rect(600, 75, 65, 500), 0.35, (55, 148, 110)]]
 
 
     def simple_player_animation(self, movement, entity):
@@ -26,49 +23,47 @@ class TheFirstLevel():
             entity.animation_speed = 6
 
 
-    def player_input(self, dt, entity, collision):
+    def player_input(self, dt, entity):
         movement = [0, 0]
-        self.player.y_momentum += 20 * dt
+        entity.y_momentum += 20 * dt # gravity
 
-        if keys['right']:
-            movement[0] = self.player.speed * dt
+        if keys['right']: # key input
+            movement[0] = entity.speed * dt
             entity.flip_x = True
         if keys['left']:
-            movement[0] = -self.player.speed * dt
+            movement[0] = -entity.speed * dt
             entity.flip_x = False
-        if keys['up'] and collision['bottom']:
-            if self.player.air_timer < 10:
-                self.player.y_momentum = - self.player.jump_height * dt
+        if keys['up'] and entity.collision['collision']['bottom']:
+            if entity.air_timer < 10:
+                entity.y_momentum = - entity.jump_height * dt
 
-        movement[1] = self.player.y_momentum
-        if self.player.y_momentum > 3:
-            self.player.y_momentum = 3
+        movement[1] = entity.y_momentum # max falling speed
+        if entity.y_momentum > 3:
+            entity.y_momentum = 3
+
+        entity.collision = entity.move(movement, self.tiles, self.entities) # collision
+        if entity.collision['collision']['bottom'] or entity.collision['collision']['top']: # If player on ground
+            entity.y_momentum = 1
+            if entity.air_timer > 1:
+                entity.HP -= 10 + int(entity.air_timer * 20)
+            entity.air_timer = 0
+        else:
+            entity.air_timer += 1 * dt
+
+        self.simple_player_animation(movement, entity) # animation
+
         return movement
 
-    def player_update(self, dt):
-        # movement
-        movement = self.player_input(dt, self.player, self.player.collision['collision'])
-        # move and jump
-        self.player.collision = self.player.move(movement, self.tiles, self.entities)
-        if self.player.collision['collision']['bottom'] or self.player.collision['collision']['top']:
-            self.player.y_momentum = 1
-            if self.player.air_timer > 1:
-                self.player.HP -= 10 + int(self.player.air_timer * 20)
-            self.player.air_timer = 0
-        else:
-            self.player.air_timer += 1 * dt
-
-        # animation
-        self.simple_player_animation(movement, self.player)
-        # camera
-        camera = E.simple_camera(self.player.get_rect(), display)
-
-        return camera, movement
 
     def play(self, display, dt):
-        camera, movement = self.player_update(dt)
+        movement = self.player_input(dt, self.player)
+        camera = E.simple_camera(self.player.get_rect(), display)
 
-        pg.draw.rect(display, (255, 249, 125), (int(self.BG_obg.x-camera[0]*0.25), int(self.BG_obg.y-camera[1]*0.25), *self.BG_obg.size)) # (55, 148, 100)
+        # BG render
+        for BG in self.BG_obg:
+            rect = (int(BG[0].x-camera[0]*BG[1]), int(BG[0].y-camera[1]*BG[1]), *BG[0].size)
+            color = BG[2]
+            pg.draw.rect(display,color, rect) # (55, 148, 100)
 
         # render world_obj
         for wob in self.world_obj:
@@ -97,4 +92,5 @@ class TheFirstLevel():
         # render player
         self.player.render(display, dt, camera)
         self.GUI.entity_HP(self.player.get_rect(), camera, self.player.HP)
+
 
