@@ -1,5 +1,5 @@
 import pygame as pg
-import sys
+import sys, time
 
 import Engine
 from Debug import debug
@@ -16,16 +16,21 @@ game_levels = {'TheFirst': TheFirstLevel(),
 state = 'TheFirst'
 
 
+messager = Engine.GUI()
+
 while True:
     dt = clock.tick(FPS) / 1000
-    display.fill((134, 212, 229))
+    timer += dt
 
-    game_levels[state].play(display, dt)
-    if keys['F3']:
-        debug(f'{int(clock.get_fps())} | {game_levels[state].player.get_rect()}', display) # game_levels[state] Engine.get_mouse_pos()
+    display.fill((134, 212, 229))
+    if int(timer) > 4:
+        game_levels[state].play(display, dt)
 
     surf = pg.transform.scale(display, WIN_SIZE)
     screen.blit(surf, (0, 0))
+    if keys['F3']:
+        debug(f'{int(clock.get_fps())} | {game_levels[state].player.y_momentum, game_levels[state].player.get_rect()}', screen) # game_levels[state] Engine.get_mouse_pos()
+    messager.message(game_levels[state].text)
     pg.display.flip()
     for event in pg.event.get():
         if event.type == pg.QUIT:
@@ -36,9 +41,9 @@ while True:
                 pg.quit()
                 sys.exit()
             if event.key == pg.K_F1:
-                pg.display.set_mode(WIN_SIZE, pg.FULLSCREEN)
+                pg.display.set_mode(WIN_SIZE, pg.FULLSCREEN, vsync=1)
             if event.key == pg.K_F2:
-                pg.display.set_mode(WIN_SIZE)
+                pg.display.set_mode(WIN_SIZE, vsync=1)
             if event.key == pg.K_F3:
                 keys['F3'] = True if keys['F3'] == False else False
 

@@ -1,6 +1,6 @@
 import pygame as pg
+import random
 from Settings import *
-
 
 def load_animation(path):
     global animation_higher_database, animation_database
@@ -34,39 +34,44 @@ def load_level_from_image(image):
     tile_map = []
     entity_map = []
     world_obj_map = []
+    background = []
     player = None
 
     rsize = 16
     sprites_dict = {
         (115, 100, 100, 255): (115, 100, 100, 255),
         (0, 0, 0, 0): (0, 0, 0, 0),
+        (151, 155, 156, 255): (151, 155, 156, 255),
 
-        (126,202,74, 255): (0, (rsize, rsize), 'tile'),
-        (111, 194, 54, 255): (1, (rsize*2, rsize), 'tile'),
-        (81, 177, 16, 255): (2, (rsize * 2, rsize*2), 'tile'),
+        (126, 202, 74, 255): (0, (rsize, rsize), 'tile'),
+        (111, 194, 54, 255): (1, (rsize * 2, rsize), 'tile'),
+        (81, 177, 16, 255): (2, (rsize * 2, rsize * 2), 'tile'),
         (50, 123, 0, 255): (9, (rsize * 8, rsize * 8), 'tile'),
 
         (134, 74, 46, 255): (3, (rsize, rsize), 'tile'),
-        (121, 67, 42, 255): (4, (rsize*2, rsize), 'tile'),
-        (121, 55, 24, 255): (5, (rsize*2, rsize*2), 'tile'),
-        (70, 32, 13, 255): (10, (rsize*8, rsize*8), 'tile'),
+        (121, 67, 42, 255): (4, (rsize * 2, rsize), 'tile'),
+        (121, 55, 24, 255): (5, (rsize * 2, rsize * 2), 'tile'),
+        (70, 32, 13, 255): (10, (rsize * 8, rsize * 8), 'tile'),
 
         (16, 200, 64, 255): (8, (rsize, rsize), 'wob'),
-        (3, 148, 41, 255): (7, (rsize, rsize), 'wob'),
-        (0, 82, 21, 255): (6, (rsize, rsize), 'wob'),
+        (3, 148, 41, 255): (6, (rsize, rsize), 'wob'),
+        (55, 148, 110, 255): (0.25, (rsize * 4, rsize * 15), 'bg'),
+        (63, 181, 133, 255): (0.5, (rsize * 3, rsize * 15), 'bg'),
 
-        (255,255,255, 255): (Entity('entity_test', 0, 0, 0, 0), (0, 0), 'player'),
-        (121, 46, 106, 255): ('spikes', (0, 0), 'entity')
-                    }
+        (255, 255, 255, 255): (Entity('entity_test', 0, 0, 0, 0), (0, 0), 'player'),
+        (121, 46, 106, 255): ('spikes', (0, 0), 'entity'),
+        (0, 82, 21, 255): ('bush', (16, 16), 'entity'),
+    }
     width = image.get_width()
     height = image.get_height()
 
     for y in range(0, height):
         for x in range(0, width):
             color_got = tuple(image.get_at((x, y)))
-            if color_got != sprites_dict[(115, 100, 100, 255)] and color_got != sprites_dict[(0, 0, 0, 0)]:
+            if color_got != sprites_dict[(115, 100, 100, 255)] and color_got != sprites_dict[
+                (0, 0, 0, 0)] and color_got != sprites_dict[(151, 155, 156, 255)]:
                 inx, size = sprites_dict[color_got][0], sprites_dict[color_got][1]
-                pos = [x*rsize, y*rsize]
+                pos = [x * rsize, y * rsize]
                 rect = pg.Rect(pos, size)
 
                 if sprites_dict[color_got][2] == 'tile':
@@ -76,39 +81,117 @@ def load_level_from_image(image):
                     player.set_pos(pos)
                 if sprites_dict[color_got][2] == 'wob':
                     world_obj_map.append([inx, rect])
+                if sprites_dict[color_got][2] == 'bg':
+                    rect.topleft = x*rsize-rsize*4, y*rsize-rsize*6
+                    background.append([rect, inx, color_got])
 
                 if sprites_dict[color_got][2] == 'entity':
                     if inx == 'spikes':
-
-                        size = rsize, rsize-5
+                        size = rsize, rsize - 5
                         pos[1] += 5
-                        entity = Entity(inx,*pos, *size ,tile_database[11])
+                        entity = Entity(inx, *pos, *size, tile_database[11])
+                        entity.id = len(entity_map)
+                        entity_map.append(entity)
+                    if inx == 'bush':
+                        size = rsize, rsize - 5
+                        entity = Entity(inx, *pos, *size, tile_database[7])
+                        entity.iscollision = False
                         entity.id = len(entity_map)
                         entity_map.append(entity)
 
-
-
-    return tile_map, world_obj_map, entity_map, player
+    return tile_map, world_obj_map, entity_map, background, player
 
 def get_mouse_pos():
     position = pg.mouse.get_pos()
-    position = position[0] // M, position[1] // M
+    position = position[0] // SCALE, position[1] // SCALE
     return position
 
-def simple_camera(rect, display):
-    return int(rect.x - display.get_width() / 2 + rect.width / 2), int(
-        rect.y - display.get_height() / 2 + rect.height / 2)
+
+class User():
+    def simple_player_animation(self, movement, entity):
+        if movement[0] == 0:
+            entity.action = 'idle'
+            entity.animation_speed = 1
+        if movement[0] != 0:
+            entity.action = 'walk'
+            entity.animation_speed = 6
+
+    def health(self, entity):
+        if entity.HP > 100:  # Работаем со здоровьем
+            entity.HP = 100
+        if entity.HP < 0:
+            entity.HP = 0
+    def simple_camera(self, rect, display):
+        return int(rect.x - display.get_width() / 2 + rect.width / 2), int(
+            rect.y - display.get_height() / 2 + rect.height / 2)
+
+    def user_input(self, entity, tiles, entities, dt):
+        movement = [0, 0]
+        entity.y_momentum += 20 * dt  # Падаем
+
+        if keys['right']:  # key input
+            movement[0] = round(entity.speed * dt)
+            entity.flip_x = True
+        if keys['left']:
+            movement[0] = round(-entity.speed * dt)
+            entity.flip_x = False
+        if keys['up'] and entity.collision['collision']['bottom']:
+            if entity.air_timer < 10:
+                entity.y_momentum = - entity.jump_height * dt
+        # Ограничиваем скорость падения и прыжка
+        if entity.y_momentum > 3:  # Максимальная скорость падения
+            entity.y_momentum = 3
+        if entity.y_momentum < -6:  # Максимальная скорость прыжка
+            entity.y_momentum = -6
+        movement[1] = round(entity.y_momentum)
+
+        entity.collision = entity.move(movement, tiles, entities)  # collision
+        if entity.collision['collision']['bottom'] or entity.collision['collision'][
+            'top']:  # Если мы стоим на земле или прыгнули до потолка
+            entity.y_momentum = 1
+            if entity.air_timer > 1:
+                entity.HP -= 10 + int(entity.air_timer * 20)
+            entity.air_timer = 0
+        else:
+            entity.air_timer += 1 * dt
+
+        self.simple_player_animation(movement, entity)  # Анимируем
+        self.health(entity)
+
+
+class EntityAssets():
+    def spikes(self, entity, player, dt):
+        if entity.name == player.collision['name'][0]:
+            if entity.name == 'spikes' and player.collision['collision']['bottom'] and entity.id == \
+                    player.collision['name'][1]:
+                player.y_momentum -= 450 * dt
+                player.HP -= 10
+    def bush(self, entity, player, dt):
+        if player.collide_rect(entity.get_rect()) and entity.name == 'bush' and keys[
+            'action'] and not entity.used and player.HP < 100:
+            entity.used = True
+            entity.image = tile_database[12]
+            player.HP += random.choice([20, 30, 40, 50])
 
 
 class GUI():
     def __init__(self):
         self.sprites = []
-        self.font = pg.font.Font(None, 8)
+        self.font = pg.font.Font(None, 32)
 
     def entity_HP(self, rect, camera, hp):
-        hp_rect = pg.Rect(rect.x-camera[0]+1, rect.y-camera[1]-4, int(0.14*hp), 1)
+        hp_rect = pg.Rect(rect.x - camera[0] + 1, rect.y - camera[1] - 4, int(0.14 * hp), 1)
         pg.draw.rect(display, 'red', hp_rect)
 
+    def message(self, messages):
+
+        for mes in messages:
+            text, pos = mes[1], mes[0]
+            surf = self.font.render(str(text), False, 'black')
+            rect = surf.get_rect(topleft=pos)
+
+            #pg.draw.rect(screen, 'black', rect)
+            screen.blit(surf, rect)
 
 class Physics():
     def __init__(self, x, y, width, height):
@@ -124,7 +207,7 @@ class Physics():
                     hit_list.append(dict)
         if entities:
             for entity in entities:
-                if self.rect.colliderect(entity.obj.rect):
+                if self.rect.colliderect(entity.obj.rect) and entity.iscollision:
                     dict = {'rect': entity.obj.rect, 'name': (entity.name, entity.id), }
                     hit_list.append(dict)
         return hit_list
@@ -145,7 +228,6 @@ class Physics():
                 collision_type['left'] = True
                 tile_name = (hit['name'])
 
-
         # Y-axis
         self.rect.y += int(movement[1])
         hit_list = self.__test_collide(tiles, entities)
@@ -158,7 +240,7 @@ class Physics():
                 self.rect.top = hit['rect'].bottom
                 collision_type['top'] = True
                 tile_name = hit['name']
-        return {'collision':collision_type, 'name':tile_name}
+        return {'collision': collision_type, 'name': tile_name}
 
 
 class Entity():
@@ -167,7 +249,8 @@ class Entity():
         self.id = 0
         self.obj = Physics(x, y, width, height)
         self.collision = {'collision': {'top': False, 'bottom': False, 'left': False, 'right': False},
-                                 'name': [None, None]}
+                          'name': [None, None]}
+        self.iscollision = True
 
         self.image = image
         self.animation = None if name not in animation_higher_database else animation_higher_database[name]
@@ -183,8 +266,8 @@ class Entity():
         self.air_timer = 0
         self.y_momentum = 0
         self.speed = 200
-        self.jump_height = 325
-
+        self.jump_height = 300
+        self.used = False
 
     def get_rect(self):
         return self.obj.rect
