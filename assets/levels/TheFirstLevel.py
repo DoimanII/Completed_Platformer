@@ -8,62 +8,22 @@ import Engine as E
 class TheFirstLevel():
     def __init__(self):
         self.GUI = E.GUI()
-        self.tiles, self.world_obj, self.entities, self.player = E.load_level_from_image(
-        pg.image.load('assets/levels/maps/level_1.png')) # , self.player
+        self.user = E.User()
+        self.EA = E.EntityAssets()
+        self.text = [] # ['text' (0, 0)]
 
-        self.BG_obg = [[pg.Rect(300, 50, 25, 25), 0.25, (255, 249, 125)], [pg.Rect(200, 55, 65, 500), 0.35, (55, 148, 110)], [pg.Rect(600, 75, 65, 500), 0.35, (55, 148, 110)]]
-
-
-    def simple_player_animation(self, movement, entity):
-        if movement[0] == 0:
-            entity.action = 'idle'
-            entity.animation_speed = 1
-        if movement[0] != 0:
-            entity.action = 'walk'
-            entity.animation_speed = 6
-
-
-    def player_input(self, dt, entity):
-        movement = [0, 0]
-        entity.y_momentum += 20 * dt # gravity
-
-        if keys['right']: # key input
-            movement[0] = entity.speed * dt
-            entity.flip_x = True
-        if keys['left']:
-            movement[0] = -entity.speed * dt
-            entity.flip_x = False
-        if keys['up'] and entity.collision['collision']['bottom']:
-            if entity.air_timer < 10:
-                entity.y_momentum = - entity.jump_height * dt
-
-        movement[1] = entity.y_momentum # max falling speed
-        if entity.y_momentum > 3:
-            entity.y_momentum = 3
-
-        entity.collision = entity.move(movement, self.tiles, self.entities) # collision
-        if entity.collision['collision']['bottom'] or entity.collision['collision']['top']: # If player on ground
-            entity.y_momentum = 1
-            if entity.air_timer > 1:
-                entity.HP -= 10 + int(entity.air_timer * 20)
-            entity.air_timer = 0
-        else:
-            entity.air_timer += 1 * dt
-
-        self.simple_player_animation(movement, entity) # animation
-
-        return movement
-
+        self.tiles, self.world_obj, self.entities, self.background, self.player = E.load_level_from_image(
+        pg.image.load('assets/levels/maps/level_1.png'))
 
     def play(self, display, dt):
-        movement = self.player_input(dt, self.player)
-        camera = E.simple_camera(self.player.get_rect(), display)
+        movement = self.user.user_input(self.player, self.tiles, self.entities, dt)
+        camera = self.user.simple_camera(self.player.get_rect(), display)
 
-        # BG render
-        for BG in self.BG_obg:
+        # BackGround render
+        for BG in self.background:
             rect = (int(BG[0].x-camera[0]*BG[1]), int(BG[0].y-camera[1]*BG[1]), *BG[0].size)
             color = BG[2]
-            pg.draw.rect(display,color, rect) # (55, 148, 100)
+            pg.draw.rect(display,color, rect)
 
         # render world_obj
         for wob in self.world_obj:
@@ -82,12 +42,8 @@ class TheFirstLevel():
         # render entity
         for entity in self.entities:
             entity.render(display, dt, camera)
-            if entity.name == self.player.collision['name'][0]:
-                if entity.name == 'spikes' and self.player.collision['collision']['bottom'] and entity.id == self.player.collision['name'][1]:
-                    self.player.y_momentum -= 450 * dt
-                    self.player.HP -= 10
-
-
+            self.EA.spikes(entity, self.player, dt)
+            self.EA.bush(entity, self.player, dt)
 
         # render player
         self.player.render(display, dt, camera)
