@@ -11,12 +11,14 @@ class Sample():
         self.user = E.User()
         self.EA = E.EntityAssets()
 
+
         self.tiles, self.world_obj, self.entities, self.background, self.player = E.load_level_from_image(
         pg.image.load('assets/levels/maps/level_0.png'))
+        self.check_point = (272, 224)
 
 
     def play(self, display, dt):
-        movement = self.user.user_input(self.player, self.tiles, self.entities, dt)
+        movement = self.user.user_input(self.player, self.tiles, self.entities, dt, self.check_point)
         camera = self.user.simple_camera(self.player.get_rect(), display)
 
         # BackGround render

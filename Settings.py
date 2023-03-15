@@ -6,7 +6,7 @@ keys = {'left': False, 'right': False, 'up': False, 'down': False, 'action': Fal
 
 WIN_SIZE = (1280, 720)
 SCALE = 4
-screen = pg.display.set_mode(WIN_SIZE, pg.FULLSCREEN, vsync=1) # , pg.FULLSCREEN
+screen = pg.display.set_mode(WIN_SIZE, vsync=1) # , pg.FULLSCREEN
 WIN_RES = (screen.get_size()[0] // SCALE, screen.get_size()[1] // SCALE)
 display = pg.Surface(WIN_RES)
 
@@ -35,6 +35,8 @@ tile_database = {
     11:pg.image.load('assets/sprites/spikes.png').convert_alpha(), # Entity sprites
     7: pg.image.load('assets/sprites/tileset/world_objects/bush_16x16.png').convert_alpha(),
     12: pg.image.load('assets/sprites/tileset/world_objects/bush_eaten_16x16.png').convert_alpha(),
+    13: pg.image.load('assets/sprites/tileset/world_objects/spawnpoint_off.png').convert_alpha(),
+    14: pg.image.load('assets/sprites/tileset/world_objects/spawnpoint_on.png').convert_alpha(),
 
                  }
 

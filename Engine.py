@@ -116,16 +116,22 @@ class User():
             entity.action = 'walk'
             entity.animation_speed = 6
 
-    def health(self, entity):
+    def health(self, entity, check_point):
         if entity.HP > 100:  # Работаем со здоровьем
             entity.HP = 100
         if entity.HP < 0:
             entity.HP = 0
+            self.death(entity, check_point)
+
+    def death(self, entity, check_point):
+        if entity.HP <= 0:
+            entity.set_pos(check_point)
+            entity.HP = 100
     def simple_camera(self, rect, display):
         return int(rect.x - display.get_width() / 2 + rect.width / 2), int(
             rect.y - display.get_height() / 2 + rect.height / 2)
 
-    def user_input(self, entity, tiles, entities, dt):
+    def user_input(self, entity, tiles, entities, dt, check_point):
         movement = [0, 0]
         entity.y_momentum += 20 * dt  # Падаем
 
@@ -156,8 +162,10 @@ class User():
             entity.air_timer += 1 * dt
 
         self.simple_player_animation(movement, entity)  # Анимируем
-        self.health(entity)
+        self.health(entity, check_point)
 
+
+        return movement
 
 class EntityAssets():
     def spikes(self, entity, player, dt):
@@ -174,6 +182,45 @@ class EntityAssets():
             player.HP += random.choice([20, 30, 40, 50])
 
 
+    def spawn_point_entity(self, entity, player, check_point): # WORKING IN PROGRESS!
+        if entity.name == 'spawn' and player.collide_rect(entity.get_rect()):
+            if keys['action'] and not entity.used:
+                entity.used = True
+                entity.image = tile_database[14]
+                return entity.get_pos
+            else:
+                return check_point
+
+
+
+    # Неплохо! Но надо думать дальше. Еще нашлась проблема с коллизиями. Мы запоминаем лишь один объект, с которым сталкиваемся, хотя по факту мы можем столкнуться с кучей объектов
+    def test(self, entity, player, pl_movement, tiles, dt):
+        if entity.name == 'test':
+            movement = [0, 0]
+            if player.collision['name'][0] == 'test' and (
+                    player.collision['collision']['left'] or player.collision['collision']['right']):
+                movement[0] = pl_movement[0]
+            entity.y_momentum += 20 * dt  # Падаем
+
+            if entity.y_momentum > 3:  # Максимальная скорость падения
+                entity.y_momentum = 3
+            if entity.y_momentum < -6:  # Максимальная скорость прыжка
+                entity.y_momentum = -6
+            movement[1] = round(entity.y_momentum)
+            entity.collision = entity.move(movement, tiles)
+            if entity.collision['collision']['bottom'] or entity.collision['collision'][
+                'top']:  # Если мы стоим на земле или прыгнули до потолка
+                entity.y_momentum = 1
+                if entity.air_timer > 1:
+                    entity.HP -= 10 + int(entity.air_timer * 20)
+                entity.air_timer = 0
+            else:
+                entity.air_timer += 1 * dt
+
+
+
+
+
 class GUI():
     def __init__(self):
         self.sprites = []
@@ -183,15 +230,13 @@ class GUI():
         hp_rect = pg.Rect(rect.x - camera[0] + 1, rect.y - camera[1] - 4, int(0.14 * hp), 1)
         pg.draw.rect(display, 'red', hp_rect)
 
-    def message(self, messages):
-
-        for mes in messages:
-            text, pos = mes[1], mes[0]
-            surf = self.font.render(str(text), False, 'black')
-            rect = surf.get_rect(topleft=pos)
-
-            #pg.draw.rect(screen, 'black', rect)
-            screen.blit(surf, rect)
+    def message(self, data_dict):
+        for tag in data_dict:
+            text, pos, color, font, show = data_dict[tag]['text'], data_dict[tag]['pos'], data_dict[tag]['color'], data_dict[tag]['font'], data_dict[tag]['show']
+            if show:
+                surf = font.render(str(text), False, color)
+                rect = surf.get_rect(topleft=pos)
+                screen.blit(surf, rect)
 
 class Physics():
     def __init__(self, x, y, width, height):
@@ -244,13 +289,13 @@ class Physics():
 
 
 class Entity():
-    def __init__(self, name, x, y, width, height, image=None):
+    def __init__(self, name, x, y, width, height, image=None, iscollision = True):
         self.name = name
         self.id = 0
         self.obj = Physics(x, y, width, height)
         self.collision = {'collision': {'top': False, 'bottom': False, 'left': False, 'right': False},
                           'name': [None, None]}
-        self.iscollision = True
+        self.iscollision = iscollision
 
         self.image = image
         self.animation = None if name not in animation_higher_database else animation_higher_database[name]

@@ -29,9 +29,13 @@ while True:
     surf = pg.transform.scale(display, WIN_SIZE)
     screen.blit(surf, (0, 0))
     if keys['F3']:
-        debug(f'{int(clock.get_fps())} | {game_levels[state].player.y_momentum, game_levels[state].player.get_rect()}', screen) # game_levels[state] Engine.get_mouse_pos()
-    messager.message(game_levels[state].text)
+        debug(f'position:{game_levels[state].player.get_pos()}', screen)
+        #debug(f'{int(clock.get_fps())} | {game_levels[state].player.y_momentum, game_levels[state].player.get_rect()}', screen) # game_levels[state] Engine.get_mouse_pos()
+    if int(timer) > 4:
+        messager.message(game_levels[state].text)
+
     pg.display.flip()
+
     for event in pg.event.get():
         if event.type == pg.QUIT:
             pg.quit()

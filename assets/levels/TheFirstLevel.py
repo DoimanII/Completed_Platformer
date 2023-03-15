@@ -10,13 +10,23 @@ class TheFirstLevel():
         self.GUI = E.GUI()
         self.user = E.User()
         self.EA = E.EntityAssets()
-        self.text = [] # ['text' (0, 0)]
+
+        self.level_name = 'TheFirstLevel'
+        self.text = {'player_name':{'text': ' Лиза', 'pos': (0, 0), 'color': 'white', 'font': pg.font.Font(None, 24), 'show': True}}
+        self.check_point = [272, 736]
+
 
         self.tiles, self.world_obj, self.entities, self.background, self.player = E.load_level_from_image(
         pg.image.load('assets/levels/maps/level_1.png'))
 
+
+        # self.entities.append(E.Entity('test', self.player.get_pos()[0]+48, self.player.get_pos()[1], 0, 0, tile_database[3]))
+        #
+        # self.entities.append(
+        #     E.Entity('spawn', self.player.get_pos()[0] + 64, self.player.get_pos()[1]+16, 0, 0, tile_database[13], False))
+        #
     def play(self, display, dt):
-        movement = self.user.user_input(self.player, self.tiles, self.entities, dt)
+        movement = self.user.user_input(self.player, self.tiles, self.entities, dt, self.check_point)
         camera = self.user.simple_camera(self.player.get_rect(), display)
 
         # BackGround render
@@ -44,9 +54,15 @@ class TheFirstLevel():
             entity.render(display, dt, camera)
             self.EA.spikes(entity, self.player, dt)
             self.EA.bush(entity, self.player, dt)
+            #self.EA.spawn_point_entity(entity, self.player, self.check_point)
+
 
         # render player
         self.player.render(display, dt, camera)
         self.GUI.entity_HP(self.player.get_rect(), camera, self.player.HP)
+
+        self.text['player_name']['pos'] = (self.player.get_pos()[0]-camera[0])*SCALE, (self.player.get_pos()[1]-9-camera[1])*SCALE
+        if keys['action']:
+            self.text['player_name']['color'] = (random.randint(0, 250), random.randint(0, 250), random.randint(0, 250))
 
 
