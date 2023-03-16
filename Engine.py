@@ -2,6 +2,7 @@ import pygame as pg
 import random
 from Settings import *
 
+
 def load_animation(path):
     global animation_higher_database, animation_database
     with open(path + 'entity_animation.txt', 'r') as file:
@@ -30,6 +31,7 @@ def load_animation(path):
                 animation_higher_database[entity_name][animation_name].append(animation_path)
             n += 1
 
+
 def load_level_from_image(image):
     tile_map = []
     entity_map = []
@@ -43,24 +45,27 @@ def load_level_from_image(image):
         (0, 0, 0, 0): (0, 0, 0, 0),
         (151, 155, 156, 255): (151, 155, 156, 255),
 
-        (126, 202, 74, 255): (0, (rsize, rsize), 'tile'),
-        (111, 194, 54, 255): (1, (rsize * 2, rsize), 'tile'),
-        (81, 177, 16, 255): (2, (rsize * 2, rsize * 2), 'tile'),
-        (50, 123, 0, 255): (9, (rsize * 8, rsize * 8), 'tile'),
+        (126, 202, 74, 255): ('grass', (rsize, rsize), 'tile'),
+        (111, 194, 54, 255): ('grass32x16', (rsize * 2, rsize), 'tile'),
+        (81, 177, 16, 255): ('grass32x32', (rsize * 2, rsize * 2), 'tile'),
+        (50, 123, 0, 255): ('grass128x128', (rsize * 8, rsize * 8), 'tile'),
 
-        (134, 74, 46, 255): (3, (rsize, rsize), 'tile'),
-        (121, 67, 42, 255): (4, (rsize * 2, rsize), 'tile'),
-        (121, 55, 24, 255): (5, (rsize * 2, rsize * 2), 'tile'),
-        (70, 32, 13, 255): (10, (rsize * 8, rsize * 8), 'tile'),
+        (134, 74, 46, 255): ('dirt', (rsize, rsize), 'tile'),
+        (121, 67, 42, 255): ('dirt32x16', (rsize * 2, rsize), 'tile'),
+        (121, 55, 24, 255): ('dirt32x32', (rsize * 2, rsize * 2), 'tile'),
+        (70, 32, 13, 255): ('dirt128x128', (rsize * 8, rsize * 8), 'tile'),
 
-        (16, 200, 64, 255): (8, (rsize, rsize), 'wob'),
-        (3, 148, 41, 255): (6, (rsize, rsize), 'wob'),
-        (55, 148, 110, 255): (0.25, (rsize * 4, rsize * 15), 'bg'),
-        (63, 181, 133, 255): (0.5, (rsize * 3, rsize * 15), 'bg'),
+        (16, 200, 64, 255): ('plant', (rsize, rsize), 'wob'),
+        (3, 148, 41, 255): ('little_tree', (rsize, rsize), 'wob'),
+        (55, 148, 110, 255): (0.25, (rsize * 4, rsize * 32), 'bg'),
+        (63, 181, 133, 255): (0.5, (rsize * 3, rsize * 32), 'bg'),
 
         (255, 255, 255, 255): (Entity('entity_test', 0, 0, 0, 0), (0, 0), 'player'),
+
         (121, 46, 106, 255): ('spikes', (0, 0), 'entity'),
         (0, 82, 21, 255): ('bush', (16, 16), 'entity'),
+        (100, 160, 59, 255): ('fblock', (16, 16), 'entity'),
+        (194, 80, 23, 255): ('pblock', (16, 16), 'entity'),
     }
     width = image.get_width()
     height = image.get_height()
@@ -82,24 +87,38 @@ def load_level_from_image(image):
                 if sprites_dict[color_got][2] == 'wob':
                     world_obj_map.append([inx, rect])
                 if sprites_dict[color_got][2] == 'bg':
-                    rect.topleft = x*rsize-rsize*4, y*rsize-rsize*6
+                    rect.topleft = x * rsize - rsize * 4, y * 6
                     background.append([rect, inx, color_got])
 
                 if sprites_dict[color_got][2] == 'entity':
                     if inx == 'spikes':
                         size = rsize, rsize - 5
                         pos[1] += 5
-                        entity = Entity(inx, *pos, *size, tile_database[11])
+                        entity = Entity(inx, *pos, *size, tile_database['spikes'])
                         entity.id = len(entity_map)
                         entity_map.append(entity)
+
                     if inx == 'bush':
                         size = rsize, rsize - 5
-                        entity = Entity(inx, *pos, *size, tile_database[7])
+                        entity = Entity(inx, *pos, *size, tile_database['bush'])
                         entity.iscollision = False
                         entity.id = len(entity_map)
                         entity_map.append(entity)
 
+                    if inx == 'fblock':
+                        size = rsize, rsize - 5
+                        entity = Entity(inx, *pos, *size, tile_database['grass'])
+                        entity.id = len(entity_map)
+                        entity_map.append(entity)
+
+                    if inx == 'pblock':
+                        size = rsize, rsize - 5
+                        entity = Entity(inx, *pos, *size, tile_database['box'])
+                        entity.id = len(entity_map)
+                        entity_map.append(entity)
+
     return tile_map, world_obj_map, entity_map, background, player
+
 
 def get_mouse_pos():
     position = pg.mouse.get_pos()
@@ -127,6 +146,7 @@ class User():
         if entity.HP <= 0:
             entity.set_pos(check_point)
             entity.HP = 100
+
     def simple_camera(self, rect, display):
         return int(rect.x - display.get_width() / 2 + rect.width / 2), int(
             rect.y - display.get_height() / 2 + rect.height / 2)
@@ -141,7 +161,7 @@ class User():
         if keys['left']:
             movement[0] = round(-entity.speed * dt)
             entity.flip_x = False
-        if keys['up'] and entity.collision['collision']['bottom']:
+        if keys['up'] and entity.collision['bottom']['collided']:
             if entity.air_timer < 10:
                 entity.y_momentum = - entity.jump_height * dt
         # Ограничиваем скорость падения и прыжка
@@ -152,8 +172,8 @@ class User():
         movement[1] = round(entity.y_momentum)
 
         entity.collision = entity.move(movement, tiles, entities)  # collision
-        if entity.collision['collision']['bottom'] or entity.collision['collision'][
-            'top']:  # Если мы стоим на земле или прыгнули до потолка
+        if entity.collision['bottom']['collided'] or entity.collision['top'][
+            'collided']:  # Если мы стоим на земле или прыгнули до потолка
             entity.y_momentum = 1
             if entity.air_timer > 1:
                 entity.HP -= 10 + int(entity.air_timer * 20)
@@ -164,61 +184,65 @@ class User():
         self.simple_player_animation(movement, entity)  # Анимируем
         self.health(entity, check_point)
 
-
         return movement
+
 
 class EntityAssets():
     def spikes(self, entity, player, dt):
-        if entity.name == player.collision['name'][0]:
-            if entity.name == 'spikes' and player.collision['collision']['bottom'] and entity.id == \
-                    player.collision['name'][1]:
+        if entity.name == (
+                player.collision['top']['name'] or player.collision['bottom']['name'] or player.collision['left'][
+            'name'] or player.collision['right']['name']):
+            if entity.name == 'spikes' and player.collision['bottom']['collided'] and entity.id == \
+                    player.collision['bottom']['id']:
                 player.y_momentum -= 450 * dt
                 player.HP -= 10
+
     def bush(self, entity, player, dt):
         if player.collide_rect(entity.get_rect()) and entity.name == 'bush' and keys[
             'action'] and not entity.used and player.HP < 100:
             entity.used = True
-            entity.image = tile_database[12]
+            entity.image = tile_database['bush_eaten']
             player.HP += random.choice([20, 30, 40, 50])
 
-
-    def spawn_point_entity(self, entity, player, check_point): # WORKING IN PROGRESS!
+    def spawn_point_entity(self, entity, player, check_point):  # WORKING IN PROGRESS!
         if entity.name == 'spawn' and player.collide_rect(entity.get_rect()):
             if keys['action'] and not entity.used:
                 entity.used = True
-                entity.image = tile_database[14]
+                entity.image = tile_database['spawn_point_on']
                 return entity.get_pos
             else:
                 return check_point
 
-
-
-    # Неплохо! Но надо думать дальше. Еще нашлась проблема с коллизиями. Мы запоминаем лишь один объект, с которым сталкиваемся, хотя по факту мы можем столкнуться с кучей объектов
-    def test(self, entity, player, pl_movement, tiles, dt):
-        if entity.name == 'test':
+    def falling_block(self, entity, player, tiles, enitiies, dt):
+        if entity.name == 'fblock':
             movement = [0, 0]
-            if player.collision['name'][0] == 'test' and (
-                    player.collision['collision']['left'] or player.collision['collision']['right']):
-                movement[0] = pl_movement[0]
-            entity.y_momentum += 20 * dt  # Падаем
+            if player.collision['bottom']['name'] == entity.name and player.collision['bottom']['id'] == entity.id:
+                entity.used = True
+            if entity.collision['bottom']['name'] == 'spikes':
+                enitiies.remove(entity)
+            if entity.used:
+                entity.y_momentum += 20 * dt
+                if entity.y_momentum > 3:  # Максимальная скорость падения
+                    entity.y_momentum = 3
+                if entity.y_momentum < -6:  # Максимальная скорость прыжка
+                    entity.y_momentum = -6
+                movement[1] = round(entity.y_momentum)
+                entity.collision = entity.move(movement, tiles, enitiies)
 
+    def phys_block(self, entity, player, tiles, enitiies, pl_movement, dt):
+        if entity.name == 'pblock':
+            movement = [0, 0]
+            if (player.collision['left']['name'] == entity.name and player.collision['left']['id'] == entity.id) or (
+                    player.collision['right']['name'] == entity.name and player.collision['right']['id'] == entity.id):
+                movement[0] = pl_movement[0]
+
+            entity.y_momentum += 20 * dt
             if entity.y_momentum > 3:  # Максимальная скорость падения
                 entity.y_momentum = 3
             if entity.y_momentum < -6:  # Максимальная скорость прыжка
                 entity.y_momentum = -6
             movement[1] = round(entity.y_momentum)
-            entity.collision = entity.move(movement, tiles)
-            if entity.collision['collision']['bottom'] or entity.collision['collision'][
-                'top']:  # Если мы стоим на земле или прыгнули до потолка
-                entity.y_momentum = 1
-                if entity.air_timer > 1:
-                    entity.HP -= 10 + int(entity.air_timer * 20)
-                entity.air_timer = 0
-            else:
-                entity.air_timer += 1 * dt
-
-
-
+            entity.collision = entity.move(movement, tiles, enitiies)
 
 
 class GUI():
@@ -232,11 +256,13 @@ class GUI():
 
     def message(self, data_dict):
         for tag in data_dict:
-            text, pos, color, font, show = data_dict[tag]['text'], data_dict[tag]['pos'], data_dict[tag]['color'], data_dict[tag]['font'], data_dict[tag]['show']
+            text, pos, color, font, show = data_dict[tag]['text'], data_dict[tag]['pos'], data_dict[tag]['color'], \
+            data_dict[tag]['font'], data_dict[tag]['show']
             if show:
                 surf = font.render(str(text), False, color)
                 rect = surf.get_rect(topleft=pos)
                 screen.blit(surf, rect)
+
 
 class Physics():
     def __init__(self, x, y, width, height):
@@ -247,31 +273,35 @@ class Physics():
 
         if tiles:
             for tile in tiles:
-                if self.rect.colliderect(tile[1]):
-                    dict = {'rect': tile[1], 'name': ('tile', tile[0])}
+                if self.rect.colliderect(tile[1]) and self.rect != tile[1]:
+                    dict = {'rect': tile[1], 'name': 'tile', 'id': 0}
                     hit_list.append(dict)
         if entities:
             for entity in entities:
-                if self.rect.colliderect(entity.obj.rect) and entity.iscollision:
-                    dict = {'rect': entity.obj.rect, 'name': (entity.name, entity.id), }
+                if self.rect.colliderect(entity.obj.rect) and entity.iscollision and self.rect != entity.get_rect():
+                    dict = {'rect': entity.obj.rect, 'name': entity.name, 'id': entity.id}
                     hit_list.append(dict)
         return hit_list
 
     def move(self, movement, tiles=None, entities=None):
-        collision_type = {'top': False, 'bottom': False, 'left': False, 'right': False}
-        tile_name = [None, None]
+        collision_type = {'top': {'collided': False, 'name': None, 'id': -1},
+                          'bottom': {'collided': False, 'name': None, 'id': -1},
+                          'left': {'collided': False, 'name': None, 'id': -1},
+                          'right': {'collided': False, 'name': None, 'id': -1}}
         # X-axis
         self.rect.x += int(movement[0])
         hit_list = self.__test_collide(tiles, entities)
         for hit in hit_list:
             if movement[0] > 0:
                 self.rect.right = hit['rect'].left
-                collision_type['right'] = True
-                tile_name = (hit['name'])
+                collision_type['right']['collided'] = True
+                collision_type['right']['name'] = hit['name']
+                collision_type['right']['id'] = hit['id']
             if movement[0] < 0:
                 self.rect.left = hit['rect'].right
-                collision_type['left'] = True
-                tile_name = (hit['name'])
+                collision_type['left']['collided'] = True
+                collision_type['left']['name'] = hit['name']
+                collision_type['left']['id'] = hit['id']
 
         # Y-axis
         self.rect.y += int(movement[1])
@@ -279,22 +309,26 @@ class Physics():
         for hit in hit_list:
             if movement[1] > 0:
                 self.rect.bottom = hit['rect'].top
-                collision_type['bottom'] = True
-                tile_name = hit['name']
+                collision_type['bottom']['collided'] = True
+                collision_type['bottom']['name'] = hit['name']
+                collision_type['bottom']['id'] = hit['id']
             if movement[1] < 0:
                 self.rect.top = hit['rect'].bottom
-                collision_type['top'] = True
-                tile_name = hit['name']
-        return {'collision': collision_type, 'name': tile_name}
+                collision_type['top']['collided'] = True
+                collision_type['top']['name'] = hit['name']
+                collision_type['top']['id'] = hit['id']
+        return collision_type
 
 
 class Entity():
-    def __init__(self, name, x, y, width, height, image=None, iscollision = True):
+    def __init__(self, name, x, y, width, height, image=None, iscollision=True, id=0):
         self.name = name
-        self.id = 0
+        self.id = id
         self.obj = Physics(x, y, width, height)
-        self.collision = {'collision': {'top': False, 'bottom': False, 'left': False, 'right': False},
-                          'name': [None, None]}
+        self.collision = {'top': {'collided': False, 'name': None, 'id': -1},
+                          'bottom': {'collided': False, 'name': None, 'id': -1},
+                          'left': {'collided': False, 'name': None, 'id': -1},
+                          'right': {'collided': False, 'name': None, 'id': -1}}
         self.iscollision = iscollision
 
         self.image = image

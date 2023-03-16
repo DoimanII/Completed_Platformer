@@ -17,21 +17,32 @@ state = 'TheFirst'
 
 
 messager = Engine.GUI()
-
+loading_timer = 4
 while True:
     dt = clock.tick(FPS) / 1000
     timer += dt
-
     display.fill((134, 212, 229))
-    if int(timer) > 4:
-        game_levels[state].play(display, dt)
 
+    # Load game
+    if int(timer) > loading_timer:
+        game_levels[state].play(display, dt)
+    else:
+        pg.draw.rect(display, 'red', ((50, 100), (25*timer, 10)))
+
+    # transform win_res
     surf = pg.transform.scale(display, WIN_SIZE)
     screen.blit(surf, (0, 0))
+
+    # show F3_info
     if keys['F3']:
-        debug(f'position:{game_levels[state].player.get_pos()}', screen)
-        #debug(f'{int(clock.get_fps())} | {game_levels[state].player.y_momentum, game_levels[state].player.get_rect()}', screen) # game_levels[state] Engine.get_mouse_pos()
-    if int(timer) > 4:
+        debug(f'FPS: {int(clock.get_fps())} | player_rect: {game_levels[state].player.get_rect()}', screen)
+        debug(f'collision top/bottom:{game_levels[state].player.collision["top"], game_levels[state].player.collision["bottom"]}', screen, (15,45))
+        debug(
+            f'collision left/right:{game_levels[state].player.collision["left"], game_levels[state].player.collision["right"]}',
+            screen, (15, 75))
+
+    # Render text
+    if int(timer) > loading_timer+1:
         messager.message(game_levels[state].text)
 
     pg.display.flip()
