@@ -45,6 +45,12 @@ def load_level_from_image(image):
         (0, 0, 0, 0): (0, 0, 0, 0),
         (151, 155, 156, 255): (151, 155, 156, 255),
 
+        (104, 255, 0, 255): ('left_grassramp_16x16', (rsize, rsize), 'ramp', 1),
+        (144, 251, 70, 255): ('right_grassramp_16x16', (rsize, rsize), 'ramp', 2),
+
+        (29, 66, 3, 255): ('left_littlegrass_16x16', (rsize, rsize), 'tile'),
+        (17, 41, 1, 255): ('right_littlegrass_16x16', (rsize, rsize), 'tile'),
+
         (126, 202, 74, 255): ('grass', (rsize, rsize), 'tile'),
         (111, 194, 54, 255): ('grass32x16', (rsize * 2, rsize), 'tile'),
         (81, 177, 16, 255): ('grass32x32', (rsize * 2, rsize * 2), 'tile'),
@@ -75,12 +81,16 @@ def load_level_from_image(image):
             color_got = tuple(image.get_at((x, y)))
             if color_got != sprites_dict[(115, 100, 100, 255)] and color_got != sprites_dict[
                 (0, 0, 0, 0)] and color_got != sprites_dict[(151, 155, 156, 255)]:
+
                 inx, size = sprites_dict[color_got][0], sprites_dict[color_got][1]
                 pos = [x * rsize, y * rsize]
                 rect = pg.Rect(pos, size)
 
                 if sprites_dict[color_got][2] == 'tile':
                     tile_map.append([inx, rect])
+                if sprites_dict[color_got][2] == 'ramp': # ['left_grassramp_16x16', pg.Rect(320, 736+16, 16, 16), 1]
+                    ramp_type = sprites_dict[color_got][3]
+                    tile_map.append([inx, rect, ramp_type])
                 if sprites_dict[color_got][2] == 'player':
                     player = inx
                     player.set_pos(pos)
@@ -127,6 +137,17 @@ def get_mouse_pos():
 
 
 class User():
+    def __init__(self, ):
+
+        # box setup
+        self.keyboarder_speed = 5
+        self.mouse_speed = 5
+        self.camera_boarders = {'left':105, 'right':105, 'top':30, 'bottom':30}
+        self.camera_rect = pg.Rect(self.camera_boarders['left'], self.camera_boarders['top'],
+                                   display.get_width() - (self.camera_boarders['left'] + self.camera_boarders['right']),
+                                   display.get_height() - (
+                                               self.camera_boarders['top'] + self.camera_boarders['bottom']))
+
     def simple_player_animation(self, movement, entity):
         if movement[0] == 0:
             entity.action = 'idle'
@@ -148,8 +169,34 @@ class User():
             entity.HP = 100
 
     def simple_camera(self, rect, display):
-        return int(rect.x - display.get_width() / 2 + rect.width / 2), int(
-            rect.y - display.get_height() / 2 + rect.height / 2)
+        return int(rect.centerx - display.get_width() / 2), int(rect.centery - display.get_height() / 2)
+
+    def box_target_camera(self, target):
+        if target.left < self.camera_rect.left:
+            self.camera_rect.left = target.left
+        if target.right > self.camera_rect.right:
+            self.camera_rect.right = target.right
+
+        if target.top < self.camera_rect.top:
+            self.camera_rect.top = target.top
+        if target.bottom > self.camera_rect.bottom:
+            self.camera_rect.bottom = target.bottom
+
+        return self.camera_rect.left - self.camera_boarders['left'], self.camera_rect.top - self.camera_boarders['top']
+
+    def mouse_control_camera(self):
+        m_pos = pg.math.Vector2(pg.mouse.get_pos()[0] // SCALE, pg.mouse.get_pos()[1] // SCALE)
+        if m_pos.x <= self.camera_boarders['left']:
+            self.camera_rect.centerx -= self.mouse_speed
+        if m_pos.x >= WIN_RES[0] - self.camera_boarders['right']:
+            self.camera_rect.centerx += self.mouse_speed
+
+        if m_pos.y <= self.camera_boarders['top']:
+            self.camera_rect.centery -= self.mouse_speed
+        if m_pos.y >= WIN_RES[1] - self.camera_boarders['bottom']:
+            self.camera_rect.centery += self.mouse_speed
+
+        return self.camera_rect.left - self.camera_boarders['left'], self.camera_rect.top - self.camera_boarders['top']
 
     def user_input(self, entity, tiles, entities, dt, check_point):
         movement = [0, 0]
@@ -158,9 +205,14 @@ class User():
         if keys['right']:  # key input
             movement[0] = round(entity.speed * dt)
             entity.flip_x = True
+            vel = [random.randint(-3, 3), random.randint(-1, 1)]
+            entity.particles.append([[*entity.get_rect().midbottom], vel, random.randint(3, 5)]) if entity.collision['bottom']['collided'] else None
         if keys['left']:
             movement[0] = round(-entity.speed * dt)
             entity.flip_x = False
+
+            vel = [random.randint(-3, 3), random.randint(-1, 1)]
+            entity.particles.append([[*entity.get_rect().midbottom], vel, random.randint(3, 5)]) if entity.collision['bottom']['collided'] else None
         if keys['up'] and entity.collision['bottom']['collided']:
             if entity.air_timer < 10:
                 entity.y_momentum = - entity.jump_height * dt
@@ -257,7 +309,7 @@ class GUI():
     def message(self, data_dict):
         for tag in data_dict:
             text, pos, color, font, show = data_dict[tag]['text'], data_dict[tag]['pos'], data_dict[tag]['color'], \
-            data_dict[tag]['font'], data_dict[tag]['show']
+                data_dict[tag]['font'], data_dict[tag]['show']
             if show:
                 surf = font.render(str(text), False, color)
                 rect = surf.get_rect(topleft=pos)
@@ -288,9 +340,12 @@ class Physics():
                           'bottom': {'collided': False, 'name': None, 'id': -1},
                           'left': {'collided': False, 'name': None, 'id': -1},
                           'right': {'collided': False, 'name': None, 'id': -1}}
+        normal_tiles = [tile for tile in tiles if len(tile)==2]
+        ramps = [tile for tile in tiles if len(tile) > 2]
+
         # X-axis
         self.rect.x += int(movement[0])
-        hit_list = self.__test_collide(tiles, entities)
+        hit_list = self.__test_collide(normal_tiles, entities)
         for hit in hit_list:
             if movement[0] > 0:
                 self.rect.right = hit['rect'].left
@@ -305,7 +360,7 @@ class Physics():
 
         # Y-axis
         self.rect.y += int(movement[1])
-        hit_list = self.__test_collide(tiles, entities)
+        hit_list = self.__test_collide(normal_tiles, entities)
         for hit in hit_list:
             if movement[1] > 0:
                 self.rect.bottom = hit['rect'].top
@@ -317,6 +372,30 @@ class Physics():
                 collision_type['top']['collided'] = True
                 collision_type['top']['name'] = hit['name']
                 collision_type['top']['id'] = hit['id']
+
+        #RAMPS
+        if ramps:
+            for ramp in ramps:
+                hit_box = ramp[1]
+                TILE_SIZE = 16
+                if self.rect.colliderect(hit_box):
+                    rel_x = (self.rect.x - hit_box.x)
+                    if ramp[2] == 1:
+                        pos_height = rel_x + self.rect.width
+                    if ramp[2] == 2:
+                        pos_height = TILE_SIZE - rel_x
+
+                    pos_height = min(pos_height, TILE_SIZE)
+                    pos_height = max(pos_height, 0)
+
+                    target_y = hit_box.y + TILE_SIZE - pos_height
+
+                    if self.rect.bottom > target_y:
+                        self.rect.bottom = target_y
+                        collision_type['bottom']['collided'] = True
+                        collision_type['bottom']['name'] = 'ramp'
+                        collision_type['bottom']['id'] = ramp[2]
+
         return collision_type
 
 
@@ -347,6 +426,9 @@ class Entity():
         self.speed = 200
         self.jump_height = 300
         self.used = False
+        self.particles = []
+
+        self.image_to_render = pg.Surface((self.get_size()))  # DELETE
 
     def get_rect(self):
         return self.obj.rect
@@ -394,3 +476,4 @@ class Entity():
 
             pos = self.get_pos()[0] - camera[0], self.get_pos()[1] - camera[1]
             display.blit(image_to_render, pos)
+            self.image_to_render = image_to_render  # DELETE

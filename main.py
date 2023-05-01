@@ -6,18 +6,20 @@ from Debug import debug
 from Settings import *
 from assets.levels.TheFirstLevel import TheFirstLevel
 from assets.levels.Sample import Sample
+from SUJA import TEST
 
 pg.init()
 
 Engine.load_animation('assets/')
 game_levels = {'TheFirst': TheFirstLevel(),
                 'Sample': Sample(),
+               'Test': TEST(),
                }
 state = 'TheFirst'
 
 
 messager = Engine.GUI()
-loading_timer = 4
+loading_timer = 1
 while True:
     dt = clock.tick(FPS) / 1000
     timer += dt
@@ -48,6 +50,7 @@ while True:
     pg.display.flip()
 
     for event in pg.event.get():
+        #print(event)
         if event.type == pg.QUIT:
             pg.quit()
             sys.exit()

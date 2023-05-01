@@ -2,7 +2,7 @@ import time
 
 import pygame as pg
 
-keys = {'left': False, 'right': False, 'up': False, 'down': False, 'action': False, 'F3':True}
+keys = {'left': False, 'right': False, 'up': False, 'down': False, 'action': False, 'F3':False}
 
 WIN_SIZE = (1280, 720)
 SCALE = 4
@@ -24,10 +24,17 @@ tile_database = {
     'grass32x32':pg.image.load('assets/sprites/tileset/ground_tiles/grass_32x32.png').convert_alpha(), # 2
     'grass128x128':pg.image.load('assets/sprites/tileset/ground_tiles/BIG_grass_128x128.png').convert_alpha(), # 9
 
+
     'dirt':pg.image.load('assets/sprites/tileset/ground_tiles/dirt_16x16.png').convert_alpha(), # 3
     'dirt32x16':pg.image.load('assets/sprites/tileset/ground_tiles/dirt_32x16.png').convert_alpha(), # 4
     'dirt32x32':pg.image.load('assets/sprites/tileset/ground_tiles/dirt_32x32.png').convert_alpha(), # 5
     'dirt128x128':pg.image.load('assets/sprites/tileset/ground_tiles/BIG_dirt_128x128.png').convert_alpha(), # 10
+
+    'left_grassramp_16x16':pg.image.load('assets/sprites/tileset/ground_tiles/left_grassramp_16x16.png').convert_alpha(),
+    'right_grassramp_16x16':pg.image.load('assets/sprites/tileset/ground_tiles/right_grassramp_16x16.png').convert_alpha(),
+
+    'right_littlegrass_16x16':pg.image.load('assets/sprites/tileset/ground_tiles/right_littlegrass_16x16.png').convert_alpha(),
+    'left_littlegrass_16x16':pg.image.load('assets/sprites/tileset/ground_tiles/left_littlegrass_16x16.png').convert_alpha(),
 
     'little_tree':pg.image.load('assets/sprites/tileset/world_objects/little_tree_16x16.png').convert_alpha(), # World Obj 6
     'plant':pg.image.load('assets/sprites/tileset/world_objects/plant_16x16.png').convert_alpha(), # 8
