@@ -1,3 +1,5 @@
+import random
+
 import pygame as pg
 import sys, time
 
@@ -5,31 +7,59 @@ import Engine
 from Debug import debug
 from Settings import *
 from assets.levels.TheFirstLevel import TheFirstLevel
+from assets.levels.TheSecondLevel import TheSecondLevel
 from assets.levels.Sample import Sample
+from assets.levels.MainMenu import MainMenu
+from assets.levels.TheThird import TheThird
+
 from SUJA import TEST
 
 pg.init()
 
 Engine.load_animation('assets/')
 game_levels = {'TheFirst': TheFirstLevel(),
-                'Sample': Sample(),
+               'TheSecond': TheSecondLevel(),
+               'TheThird': TheThird(),
+               'Sample': Sample(),
+               'main_menu': MainMenu(),
                'Test': TEST(),
                }
-state = 'TheFirst'
-
 
 messager = Engine.GUI()
-loading_timer = 1
+loading_timer = 2
+
+state = 'main_menu'
+last_state = None
+
+
+def state_manager():
+    global state, last_state, game_levels
+    if game_levels[state].change_level_to:
+        last_state = state
+        state = game_levels[state].change_level_to
+        game_levels[state].change_level_to = None
+
+        game_levels['main_menu'].change_level_to = None
+
+    if state == 'main_menu' and game_levels[state].new_game:  # Так себе решение обнуления игры
+        game_levels['TheFirst'] = TheFirstLevel()
+        game_levels['TheSecond'] = TheSecondLevel()
+
+        game_levels[state].new_game = False
+        state = 'TheFirst'
+
+#pg.mixer.music.play(loops=-1)
 while True:
+    state_manager()
     dt = clock.tick(FPS) / 1000
     timer += dt
-    display.fill((134, 212, 229))
+    display.fill(BACKGROUND_COLOR)
 
     # Load game
     if int(timer) > loading_timer:
-        game_levels[state].play(display, dt)
+        game_levels[state].play(display, dt, last_state)
     else:
-        pg.draw.rect(display, 'red', ((50, 100), (25*timer, 10)))
+        pg.draw.rect(display, 'red', ((50, 100), (25 * timer, 10)))
 
     # transform win_res
     surf = pg.transform.scale(display, WIN_SIZE)
@@ -37,27 +67,30 @@ while True:
 
     # show F3_info
     if keys['F3']:
-        debug(f'FPS: {int(clock.get_fps())} | player_rect: {game_levels[state].player.get_rect()}', screen)
-        debug(f'collision top/bottom:{game_levels[state].player.collision["top"], game_levels[state].player.collision["bottom"]}', screen, (15,45))
+        debug(f'FPS: {int(clock.get_fps())} | E - action, Space - jump, WASD - move, F1 - Fullscreen, F2 - window', screen)
         debug(
-            f'collision left/right:{game_levels[state].player.collision["left"], game_levels[state].player.collision["right"]}',
-            screen, (15, 75))
+            f'При получение урона кусты с ягодой можно кушать, нажав кнопку Е',
+            screen, (15, 45))
+
 
     # Render text
-    if int(timer) > loading_timer+1:
+    if int(timer) > loading_timer:
         messager.message(game_levels[state].text)
 
     pg.display.flip()
-
     for event in pg.event.get():
-        #print(event)
         if event.type == pg.QUIT:
             pg.quit()
             sys.exit()
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_ESCAPE:
-                pg.quit()
-                sys.exit()
+                if state == 'main_menu':
+                    pg.quit()
+                    sys.exit()
+                else:
+                    last_state = state
+                    state = 'main_menu'
+
             if event.key == pg.K_F1:
                 pg.display.set_mode(WIN_SIZE, pg.FULLSCREEN, vsync=1)
             if event.key == pg.K_F2:
@@ -89,4 +122,3 @@ while True:
 
             if event.key == pg.K_e:
                 keys['action'] = False
-

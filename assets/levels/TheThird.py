@@ -4,18 +4,19 @@ import pygame as pg
 from Settings import *
 import Engine as E
 
-class Sample():
+class TheThird():
     def __init__(self):
         self.GUI = E.GUI()
         self.user = E.User()
         self.EA = E.EntityAssets()
 
         self.change_level_to = None
-        self.text = {'player_name':{'text': ' player', 'pos': (0, 0), 'color': 'white', 'font': pg.font.Font(None, 24), 'show': True}}
+        self.text = {'player_name':{'text': ' player', 'pos': (0, 0), 'color': 'white', 'font': pg.font.Font(None, 24), 'show': True,'alpha':120},
+                     'End':{'text': 'Конец', 'pos': (screen.get_width()//2-2*132, 200), 'color': 'white', 'font': pg.font.Font(None, 128), 'show': False,'alpha':255, 'timer': 4},}
 
 
         self.tiles, self.world_obj, self.entities, self.background, self.player, self.triggers = E.load_level_from_image(
-        pg.image.load('assets/levels/maps/level_0.png'))
+        pg.image.load('assets/levels/maps/level_3.png'))
         self.background = sorted(self.background, key=lambda bg_list: type(bg_list[1]) != float)
         self.check_point = [*self.player.get_pos()]
 
@@ -40,7 +41,6 @@ class Sample():
         # BackGround render
         for BG in self.background:
             if type(BG[1]) == float:
-
                 rect = (int((BG[0].x - self.offset.x) * BG[1]), int((BG[0].y - self.offset.y) * BG[1]), *BG[0].size)
                 color = BG[2]
                 pg.draw.rect(display, color, rect)
@@ -49,7 +49,6 @@ class Sample():
                 img = tile_database[BG[1]]
                 if display.get_rect().colliderect(rect):
                     display.blit(img, rect)
-
         # render world_obj
         for wob in self.world_obj:
             rect = (wob[1].x - self.offset.x, wob[1].y - self.offset.y, *wob[1].size)
@@ -104,8 +103,13 @@ class Sample():
         # Triggers
         for trigger in self.triggers:
             if trigger.set(self.player):
-                #trigger.show_trigger(display, self.offset)
-                self.change_level_to = 'main_menu' # CHANGE LEVEL
+
+                self.text['End']['show'] = True
+
+        self.text['End']['timer'] -= 1 * dt if self.text['End']['show'] else 0
+        self.text['End']['alpha'] -= 50 * dt if self.text['End']['show'] else 0
+        if self.text['End']['timer'] <= 0:
+            self.text['End']['show'] = False
 
         # render player
         self.player.render(display, dt, self.offset)

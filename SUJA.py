@@ -11,7 +11,7 @@ class TEST():
         self.user = E.User()
         self.EA = E.EntityAssets()
 
-        self.level_name = 'Test'
+        self.level_return = [None, False, False]
         self.text = {}
 
         self.offset = pg.math.Vector2()
@@ -41,7 +41,6 @@ class TEST():
 
 
     def play(self, display, dt):
-
         #self.offset.xy = self.user.mouse_control_camera()
         for tile in sorted(self.tiles, key=lambda tile: tile[1].centery):
             if tile[2] == 1:
